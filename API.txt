@@ -1,0 +1,3 @@
+DBpia 검색api
+참고자료: http://api.dbpia.co.kr/openApi/about/search.do
+키:5a97b793e0383e97c4c3535983b32cf0
