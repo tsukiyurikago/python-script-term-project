@@ -9,28 +9,29 @@ class Logo:
         self.master.attributes('-alpha', opacity)
         # The image must be stored to Tk or it will be garbage collected.
         self.master.image = tk.PhotoImage(file='res\img\logosample0.png')
-        label = tk.Label(self.master, image=self.master.image, bg='white')
+        self.label = tk.Label(self.master, image=self.master.image, bg='white')
         self.master.overrideredirect(True)
         self.master.geometry("+250+250")
         self.master.lift()
         self.master.wm_attributes("-topmost", True)
         self.master.wm_attributes("-disabled", True)
         self.master.wm_attributes("-transparentcolor", "white")
-        label.pack()
-        self.myupdate()
+        self.label.pack()
+        self.myTimer()
 
-    def myupdate(self):
+    def myTimer(self):
         global opacity
         global root
         self.master.attributes('-alpha', opacity)
 
         if opacity > 0.0:
             opacity -= 0.01
-            self.master.after(16, self.myupdate)
+            self.master.after(16, self.myTimer)
         else:
-            self.newWindow = tk.Toplevel(self.master)
+            self.newWindow = tk.Tk()
             self.app = Demo1(self.newWindow)
-            #self.master.destroy()
+            #self.app = Demo1(self.master)
+            self.master.destroy()
 
 
 class Demo1:
