@@ -23,14 +23,14 @@ class Logo:
         global opacity
         global root
         self.master.attributes('-alpha', opacity)
-        self.master.after(16, self.myupdate)
 
         if opacity > 0.0:
             opacity -= 0.01
+            self.master.after(16, self.myupdate)
         else:
             self.newWindow = tk.Toplevel(self.master)
-            self.app = Demo1(self.master)
-            self.master.destroy()
+            self.app = Demo1(self.newWindow)
+            #self.master.destroy()
 
 
 class Demo1:
