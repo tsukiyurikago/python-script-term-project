@@ -180,12 +180,15 @@ class info_window:
 
         channelElements = XmlTree.getiterator("channel")
         for things in channelElements:
-            item = things.find("item")
-#            itemindex = things.getiterator("item")
-            title = item.find("title").text
-            title = title.replace('<b>', '')
-            title = title.replace('</b>', '')
-            tk.Label(self.frame, text = title).pack()
+            itemElements = things.getiterator("item")
+            nIndex = 0
+            for item in itemElements:
+                if nIndex == int(nListBoxIndex[0]):
+                    title = item.find("title").text
+                    title = title.replace('<b>', '')
+                    title = title.replace('</b>', '')
+                    tk.Label(self.frame, text = title).pack()
+                    nIndex += 1
 
 
 
