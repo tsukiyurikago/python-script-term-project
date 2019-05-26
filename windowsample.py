@@ -1,5 +1,6 @@
 import tkinter as tk
 import http.client
+from xml.etree import ElementTree
 
 timer = 5.0
 opacity = 1.0
@@ -29,7 +30,7 @@ class Logo:
             opacity -= 0.01
             self.master.after(16, self.myTimer)
         else:
-            #현재 클래스에서 인스턴스로 새 tk를 만든다 현재 tk객체는 해제한다
+            #현재 클래스에서 인스턴스로 새 tk를 만든다, 현재 tk객체는 해제한다
             self.newWindow = tk.Tk()
             self.app = Demo1(self.newWindow)
             #self.app = Demo1(self.master)
@@ -69,6 +70,7 @@ class Demo2:
         self.master = master
         self.frame1 = tk.Frame(self.master)
 
+##
         self.searchResult = tk.Text(self.frame1,width=49,height=27,borderwidth=12)
 
         server = "openapi.naver.com"
@@ -82,20 +84,34 @@ class Demo2:
         print(req.status, req.reason)
         cLen = req.getheader("Content-Length")
         data = req.read(int(cLen)).decode('utf-8')
-        self.searchResult.insert(tk.INSERT, data)
-        self.searchResult.insert(tk.INSERT, "피피")
+        root = ElementTree.fromstring(data)
+#        self.searchResult.insert(tk.INSERT, data)
+        self.searchResult.insert(tk.INSERT, root[0][0].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][1].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][2].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][3].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][4].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][5].text)
+        self.searchResult.insert(tk.INSERT, '\n')
+        self.searchResult.insert(tk.INSERT, root[0][6].text)
 
         self.searchResult.pack()
+##
 
-        self.label = tk.Label(self.frame1, text = '온라인 자료창', width =60, height = 30)
+        self.label = tk.Label(self.frame1, text = '온라인 자료창')
         self.label.pack(side=tk.LEFT)
 
         self.frame1.pack()
 
         self.frame = tk.Frame(self.master)
 
-        self.quitButton = tk.Button(self.frame, text = '닫기', width = 15, command = self.close_windows)
-        self.quitButton.pack()
+        self.quitButton = tk.Button(self.frame1, text = '닫기', command = self.close_windows)
+        self.quitButton.pack(side=tk.RIGHT)
         self.frame.pack()
 
 
