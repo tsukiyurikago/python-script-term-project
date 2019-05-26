@@ -102,6 +102,9 @@ class Demo2:
         if not root[0][4].text == '0':
             self.searchResult.insert(tk.INSERT, '\n')
             self.searchResult.insert(tk.INSERT, root[0][7].find("title").text)
+        else:
+            self.searchResult.insert(tk.INSERT, '\n검색결과 없음')
+
 
         self.searchResult.pack()
 ##

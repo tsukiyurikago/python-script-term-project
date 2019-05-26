@@ -152,3 +152,4 @@ fabric.properties
 
 # End of https://www.gitignore.io/api/python,pycharm
 .idea/workspace.xml
+.idea/workspace.xml
