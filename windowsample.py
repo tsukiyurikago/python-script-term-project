@@ -85,25 +85,8 @@ class Demo2:
         cLen = req.getheader("Content-Length")
         data = req.read(int(cLen)).decode('utf-8')
         root = ElementTree.fromstring(data)
-#        self.searchResult.insert(tk.INSERT, data)
-        self.searchResult.insert(tk.INSERT, root[0][0].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][1].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][2].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][3].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][4].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][5].text)
-        self.searchResult.insert(tk.INSERT, '\n')
-        self.searchResult.insert(tk.INSERT, root[0][6].text)
-        if not root[0][4].text == '0':
-            self.searchResult.insert(tk.INSERT, '\n')
-            self.searchResult.insert(tk.INSERT, root[0][7].find("title").text)
-        else:
-            self.searchResult.insert(tk.INSERT, '\n검색결과 없음')
+
+        self.show_resultBox(root, self.searchResult)
 
 
         self.searchResult.pack()
@@ -120,6 +103,26 @@ class Demo2:
         self.quitButton.pack(side=tk.RIGHT)
         self.frame.pack()
 
+
+    def show_resultBox(self, root, resultBox):
+        resultBox.insert(tk.INSERT, root[0][0].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][1].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][2].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][3].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][4].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][5].text)
+        resultBox.insert(tk.INSERT, '\n')
+        resultBox.insert(tk.INSERT, root[0][6].text)
+        if not root[0][4].text == '0':
+            resultBox.insert(tk.INSERT, '\n')
+            resultBox.insert(tk.INSERT, root[0][7].find("title").text)
+        else:
+            resultBox.insert(tk.INSERT, '\n검색결과 없음')
 
     def close_windows(self):
         self.master.destroy()

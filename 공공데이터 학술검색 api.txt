@@ -1,0 +1,14 @@
+#import urllib
+from urllib import parse
+import http.client
+conn = http.client.HTTPConnection("dev.ndsl.kr") #openapi.naver.comdev.ndsl.kr/openapi/service
+keyword = "서울"
+keyword = parse.quote(keyword)
+#keyword = keyword.encode("utf-8")
+conn.request("GET","/openapi/service/SchlsphjrnlLocplcInfoInqireSvc/getRegstSchlshpjrnlInsttListInfo?serviceKey=pucypWLDfbEtC6UjRg%2BTBdXIpC2MNzs5iRuBns3ZhSkMD8JIA5DCkS4fojhfaQWkn%2FRiQz1%2FRphZOqKL7nC5ng%3D%3D&address={0}".format(keyword))
+req = conn.getresponse()
+print(req.status,req.reason)
+print(req.read().decode('utf-8'))
+
+#http://dev.ndsl.kr/openapi/service/SchlsphjrnlLocplcInfoInqireSvc/getRegstSchlshpjrnlInsttListInfo?serviceKey=pucypWLDfbEtC6UjRg%2BTBdXIpC2MNzs5iRuBns3ZhSkMD8JIA5DCkS4fojhfaQWkn%2FRiQz1%2FRphZOqKL7nC5ng%3D%3D&libname=%ED%95%9C%EA%B5%AD%EA%B3%BC%ED%95%99%EA%B8%B0%EC%88%A0%EC%97%B0%EA%B5%AC%EC%9B%90&address=%EC%84%9C%EC%9A%B8
+#&libname=%ED%95%9C%EA%B5%AD%EA%B3%BC%ED%95%99%EA%B8%B0%EC%88%A0%EC%97%B0%EA%B5%AC%EC%9B%90
