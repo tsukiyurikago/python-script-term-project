@@ -67,31 +67,27 @@ class Demo1:
 
 class Demo2:
     def __init__(self, master, keyword):
+        #부모 tk를 저장합니다
         self.master = master
-        self.frame1 = tk.Frame(self.master)
 
-##
-        self.searchResult = tk.Text(self.frame1,width=100,height=27,borderwidth=12)
+        #새 프레임을 등록합니다
+        self.frame1 = tk.Frame(self.master)
+        self.page = 1
+
+        #검색창을 보일 박스입니다
+        self.searchResult = tk.Listbox(self.frame1)
+
 
         server = "openapi.naver.com"
-        client_id = "ZuLj_9774MFbh52EAnsz"
-        client_secret = "0fgHPxzAdQ"
-        conn = http.client.HTTPSConnection(server)
-        keyword = keyword.encode("utf-8")
-        conn.request("GET", "/v1/search/doc.xml?query={0}&display=10&start=1".format(keyword),
-                     None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
-        req = conn.getresponse()
-        print(req.status, req.reason)
-        cLen = req.getheader("Content-Length")
-        data = req.read(int(cLen)).decode('utf-8')
-        root = ElementTree.fromstring(data)
+        self.conn = http.client.HTTPSConnection(server)
+        self.keyword = keyword.encode("utf-8")
 
-        self.show_resultBox(root, self.searchResult)
+        self.root = self.getXmlStartWithNthPage(self.conn, self.keyword, self.page)
 
+        self.show_resultBox(self.root, self.searchResult)
 
         self.searchResult.pack()
 ##
-
         self.label = tk.Label(self.frame1, text = '온라인 자료창')
         self.label.pack(side=tk.LEFT)
 
@@ -99,33 +95,79 @@ class Demo2:
 
         self.frame = tk.Frame(self.master)
 
+        tk.Button(self.frame1, text = '다음자료', command = self.nextPage).pack()
+        tk.Button(self.frame1, text = '이전자료', command = self.prevPage).pack()
         self.quitButton = tk.Button(self.frame1, text = '닫기', command = self.close_windows)
         self.quitButton.pack(side=tk.RIGHT)
         self.frame.pack()
 
+    def nextPage(self):
+        self.page += 10
+
+        self.root = self.getXmlStartWithNthPage(self.conn, self.keyword, self.page)
+
+        self.show_resultBox(self.root, self.searchResult)
+
+
+    def prevPage(self):
+        pass
+
+
+    def getXmlStartWithNthPage(self, conn, keyword, nPageNum):
+        client_id = "ZuLj_9774MFbh52EAnsz"
+        client_secret = "0fgHPxzAdQ"
+        conn.request("GET", ("/v1/search/doc.xml?query={0}&display=10&start="+str(nPageNum)).format(keyword),
+                     None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
+        req = conn.getresponse()
+        print(req.status, req.reason)
+        cLen = req.getheader("Content-Length")
+        data = req.read(int(cLen)).decode('utf-8')
+        return ElementTree.fromstring(data)
+
 
     def show_resultBox(self, root, resultBox):
-        resultBox.insert(tk.INSERT, root[0][0].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][1].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][2].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][3].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][4].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][5].text)
-        resultBox.insert(tk.INSERT, '\n')
-        resultBox.insert(tk.INSERT, root[0][6].text)
-        if not root[0][4].text == '0':
-            resultBox.insert(tk.INSERT, '\n')
-            resultBox.insert(tk.INSERT, root[0][7].find("title").text)
-        else:
-            resultBox.insert(tk.INSERT, '\n검색결과 없음')
+        resultBox.delete(0,9)
+        channelElements = root.getiterator("channel")
+        for things in channelElements:
+            itemElements = things.getiterator("item")
+            nIndex = 0
+            for item in itemElements:
+                title = item.find("title").text
+                title = title.replace('<b>', '')
+                title = title.replace('</b>', '')
+                resultBox.insert(nIndex, title)
+                nIndex += 1
+
+#        resultBox.insert(tk.INSERT, root[0][0].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][1].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][2].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][3].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][4].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][5].text)
+#        resultBox.insert(tk.INSERT, '\n')
+#        resultBox.insert(tk.INSERT, root[0][6].text)
+#        if not root[0][4].text == '0':
+#            resultBox.insert(tk.INSERT, '\n')
+#            resultBox.insert(tk.INSERT, root[0][7].find("title").text)
+#        else:
+#            resultBox.insert(tk.INSERT, '\n검색결과 없음')
 
     def close_windows(self):
         self.master.destroy()
+
+
+    def info_window(self):
+        #
+        # self.keyword = self.entry1.get()
+        #
+        # self.newWindow = tk.Toplevel(self.master)
+        # self.app = Demo2(self.newWindow, self.keyword)
+        pass
 
 
 class Demo3:
