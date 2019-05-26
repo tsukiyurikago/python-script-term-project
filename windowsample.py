@@ -71,7 +71,7 @@ class Demo2:
         self.frame1 = tk.Frame(self.master)
 
 ##
-        self.searchResult = tk.Text(self.frame1,width=49,height=27,borderwidth=12)
+        self.searchResult = tk.Text(self.frame1,width=100,height=27,borderwidth=12)
 
         server = "openapi.naver.com"
         client_id = "ZuLj_9774MFbh52EAnsz"
@@ -99,6 +99,9 @@ class Demo2:
         self.searchResult.insert(tk.INSERT, root[0][5].text)
         self.searchResult.insert(tk.INSERT, '\n')
         self.searchResult.insert(tk.INSERT, root[0][6].text)
+        if not root[0][4].text == '0':
+            self.searchResult.insert(tk.INSERT, '\n')
+            self.searchResult.insert(tk.INSERT, root[0][7].find("title").text)
 
         self.searchResult.pack()
 ##
