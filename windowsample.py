@@ -76,6 +76,7 @@ class Demo2:
 
         #검색창을 보일 박스입니다
         self.searchResult = tk.Listbox(self.frame1)
+        self.searchResult.bind("<Double-Button-1>", self.create_info_window)
 
 
         server = "openapi.naver.com"
@@ -126,7 +127,7 @@ class Demo2:
 
 
     def show_resultBox(self, root, resultBox):
-        resultBox.delete(0,9)
+        resultBox.delete(0,resultBox.size())
         channelElements = root.getiterator("channel")
         for things in channelElements:
             itemElements = things.getiterator("item")
@@ -161,13 +162,31 @@ class Demo2:
         self.master.destroy()
 
 
-    def info_window(self):
+    def create_info_window(self, event):
         #
         # self.keyword = self.entry1.get()
         #
-        # self.newWindow = tk.Toplevel(self.master)
-        # self.app = Demo2(self.newWindow, self.keyword)
+        nIndex = event.widget.curselection()
+        self.newWindow = tk.Toplevel(self.master)
+        self.app = info_window(self.newWindow, self.root , nIndex)
         pass
+
+
+class info_window:
+    def __init__(self, master, XmlTree, nListBoxIndex):
+        self.master = master
+        self.frame = tk.Frame(self.master)
+        self.frame.pack()
+
+        channelElements = XmlTree.getiterator("channel")
+        for things in channelElements:
+            item = things.find("item")
+#            itemindex = things.getiterator("item")
+            title = item.find("title").text
+            title = title.replace('<b>', '')
+            title = title.replace('</b>', '')
+            tk.Label(self.frame, text = title).pack()
+
 
 
 class Demo3:

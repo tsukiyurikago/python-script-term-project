@@ -10,4 +10,4 @@ conn.request("GET", "/v1/search/doc.xml?query={0}&display=10&start=1".format(key
 req = conn.getresponse() 
 print(req.status, req.reason)
 cLen = req.getheader("Content-Length")
-print(req.read(int(cLen)).decode('utf-8')) 
+print(req.read(int(cLen)).decode('utf-8'))
