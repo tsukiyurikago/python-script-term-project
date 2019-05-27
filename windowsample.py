@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 import webbrowser
 import tkinter.simpledialog
 import urllib
+from urllib import parse
 
 timer = 5.0
 opacity = 1.0
@@ -96,8 +97,13 @@ class TopWindow:
 
         self.keyword = self.entry1.get()
 
-        self.newWindow = tk.Toplevel(self.master)
-        self.app = Demo2(self.newWindow, self.keyword)
+        if not self.keyword == '':
+            self.newWindow = tk.Toplevel(self.master)
+            self.app = Demo2(self.newWindow, self.keyword)
+        else:
+#            tkinter.messagebox.showinfo("오류","검색 내용이 비었습니다.")
+            pass
+
 
     def new_window1(self):
         self.newWindow = tk.Toplevel(self.master)
@@ -300,6 +306,17 @@ class Demo3:
         self.quitButton = tk.Button(self.frame, text = '닫기', width = 15, command = self.close_windows)
         self.quitButton.pack()
         self.frame.pack()
+
+        conn = http.client.HTTPConnection("dev.ndsl.kr")  # openapi.naver.comdev.ndsl.kr/openapi/service
+        keyword = "서울"
+        keyword = parse.quote(keyword)
+        # keyword = keyword.encode("utf-8")
+        conn.request("GET",
+                     "/openapi/service/SchlsphjrnlLocplcInfoInqireSvc/getRegstSchlshpjrnlInsttListInfo?serviceKey=pucypWLDfbEtC6UjRg%2BTBdXIpC2MNzs5iRuBns3ZhSkMD8JIA5DCkS4fojhfaQWkn%2FRiQz1%2FRphZOqKL7nC5ng%3D%3D&address={0}".format(
+                         keyword))
+        req = conn.getresponse()
+        print(req.status, req.reason)
+        print(req.read().decode('utf-8'))
 
     def close_windows(self):
         self.master.destroy()
