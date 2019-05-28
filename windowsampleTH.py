@@ -13,7 +13,7 @@ class Logo:
         self.master = master
         self.master.attributes('-alpha', opacity)
         # The image must be stored to Tk or it will be garbage collected.
-        self.master.image = tk.PhotoImage(file='res/img/logosample0.png')
+        self.master.image = tk.PhotoImage(file='res/img/logosample1.png')
         self.label = tk.Label(self.master, image=self.master.image, bg='white')
         self.master.overrideredirect(True)
         self.master.geometry("+250+250")
@@ -52,7 +52,7 @@ class Logo:
         self.master.attributes('-alpha', opacity)
 
         if opacity > 0.0 or self.isConnectionTrying == True:
-            opacity -= 0.01
+            opacity -= 0.005
             self.master.after(16, self.myTimer)
         else:
             #현재 클래스에서 인스턴스로 새 tk를 만든다, 현재 tk객체는 해제한다
@@ -68,6 +68,7 @@ class Logo:
 class ErrorWindow:
     def __init__(self, master):
         self.master = master
+        self.master.geometry("+350+350")
         self.frame = tk.Frame(self.master)
         self.frame.pack()
         self.label = tk.Label(self.frame, text="서버연결에 실패하였습니다.")
@@ -79,6 +80,7 @@ class ErrorWindow:
 class TopWindow:
     def __init__(self, master):
         self.master = master
+        self.master.geometry("+350+350")
         self.frame = tk.Frame(self.master)
         self.entry1 = tk.Entry(self.frame, width = 30)
         self.entry1.pack(side = tk.LEFT)
