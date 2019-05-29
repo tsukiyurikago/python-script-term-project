@@ -133,6 +133,8 @@ class TopWindow:
         self.frame.pack()
         self.frame1.pack()
 
+        self.SearchAmount = []
+
     def new_window(self):
 
         self.keyword = self.entry1.get()
@@ -141,7 +143,7 @@ class TopWindow:
             self.newWindow = tk.Toplevel(self.master)
             self.app = Demo2(self.newWindow, self.keyword)
         else:
-#            tkinter.messagebox.showinfo("오류","검색 내용이 비었습니다.")
+            tkinter.messagebox.showinfo("오류","단어를 입력해주세요")
             pass
 
 
@@ -185,20 +187,31 @@ class Demo2:
 
         self.frameForResult.pack(side=tk.BOTTOM)
 
-        tk.Button(self.frameForResult, text ='다음자료', command = self.nextPage).pack()
-        tk.Button(self.frameForResult, text ='이전자료', command = self.prevPage).pack()
+##
+        tk.Button(self.frameForResult, text ='이전자료', command = self.prevPage).pack(side=tk.LEFT)
+        tk.Label(self.frameForResult, text='0').pack(side=tk.LEFT)
+        self.PageLabel = tk.Label(self.frameForResult, text=str(self.page))
+        self.PageLabel.pack(side=tk.LEFT)
+        tk.Label(self.frameForResult, text=self.root.find("channel").find("total").text).pack(side=tk.LEFT)
+        tk.Button(self.frameForResult, text ='다음자료', command = self.nextPage).pack(side=tk.LEFT)
+##
         self.quitButton = tk.Button(self.frameForResult, text ='닫기', command = self.close_windows)
-        self.quitButton.pack(side=tk.BOTTOM)
+        self.quitButton.pack(side=tk.RIGHT)
 
     def nextPage(self):
         self.page += 10
 
         self.getXmlStartWithNthPage(self.conn, self.keyword, self.page)
+        self.PageLabel.config(text=str(self.page))
 
 
     def prevPage(self):
-        pass
+        self.page -= 10
+        if self.page < 1:
+            self.page = 1
 
+        self.getXmlStartWithNthPage(self.conn, self.keyword, self.page)
+        self.PageLabel.config(text=str(self.page))
 
     def getXmlStartWithNthPage(self, conn, keyword, nPageNum):
         client_id = "ZuLj_9774MFbh52EAnsz"
@@ -344,7 +357,7 @@ class Demo3:
         self.frameForSearch = tk.Frame(self.master)
         #self.label = tk.Label(self.frame1, text = '오프라인 자료창', width =60, height = 30)
         #self.label.pack(side=tk.LEFT)
-        self.frameForSearch.pack()
+        self.frameForSearch.pack(side= tk.LEFT)
 
         self.EntryForSearch = tk.Entry(self.frameForSearch)
         self.EntryForSearch.pack()
@@ -353,22 +366,39 @@ class Demo3:
         tk.Button(self.frameForSearch,text = "검색", command = self.showResult).pack()
 
         self.ListboxForSearch = tk.Listbox(self.frameForSearch)
+        self.ListboxForSearch.bind('<Double-Button-1>', self.ListClicked)
         self.ListboxForSearch.pack()
 
         self.quitButton = tk.Button(self.frameForSearch, text = '닫기', width = 15, command = self.close_windows)
         self.quitButton.pack()
 
-        self.frameForMap = tk.Frame(self.master)
+        self.frameForMap = tk.Frame(self.master, height=250, width = 350)
         self.frameForMap.pack(side=tk.RIGHT)
 
         ##
 
         ##
+    def ListClicked(self, event):
+        nIndex = event.widget.curselection()
+        if len(nIndex) == 1:
+            # self.newWindow = tk.Toplevel(self.master)
+            # self.app = info_window(self.newWindow, self.root , nIndex)
+
+            _list = self.frameForMap.winfo_children()
+            for child in _list:
+                child.destroy()
+            i=0
+            for addrdata in self.tree.find("body").find("items").getiterator("item"):
+                if i==nIndex[0]:
+                    if addrdata.find("address") is not None:
+                        self.showMap(addrdata.find("address").text)
+                    else:
+                        tk.Label(self.frameForMap,text="지도 정보가 없습니다..").pack()
+                i+=1
 
 
     def close_windows(self):
         self.master.destroy()
-
 
     def getTree(self, keyword, Tree):
         conn = http.client.HTTPConnection("dev.ndsl.kr")  # openapi.naver.comdev.ndsl.kr/openapi/service
@@ -380,24 +410,29 @@ class Demo3:
         req = conn.getresponse()
         print(req.status, req.reason)
         data = req.read().decode('utf-8')
-        Tree = ElementTree.fromstring(data)
-        for i in Tree.find("body").find("items").getiterator("item"):
-            self.ListboxForSearch.insert(tk.END, i.find("abbrname").text)
+        self.tree = ElementTree.fromstring(data)
+        self.ListboxForSearch.delete(0,self.ListboxForSearch.size())
+        for i in self.tree.find("body").find("items").getiterator("item"):
+            if i.find("abbrname") is not None:
+                self.ListboxForSearch.insert(tk.END, i.find("abbrname").text)
 
 
 
     def showResult(self):
-        self.getTree(self.EntryForSearch.get(), self.tree)
+        if self.EntryForSearch.get() != '':
+            self.getTree(self.EntryForSearch.get(), self.tree)
 
 
     def showMap(self, keyword):
-        print(Parsing_KAKAOMAP_Address("무악동63-9")[0])
-        MapURL = make_googlemap_url(Parsing_KAKAOMAP_Address("무악동63-9")[0])
+        print(keyword)
+        #print(Parsing_KAKAOMAP_Address(keyword)[0])
+        MapURL = make_googlemap_url(Parsing_KAKAOMAP_Address(keyword)[0])
         with urlopen(MapURL) as u:
             raw_data = u.read()
         im = Image.open(BytesIO(raw_data))
         map_image = ImageTk.PhotoImage(im)
         tk.Label(self.frameForMap, image=map_image, height=250, width=350, background='white').pack()
+        tk.mainloop()
 
 
 def main():

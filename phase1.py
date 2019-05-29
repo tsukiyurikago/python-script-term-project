@@ -13,7 +13,9 @@ def myupdate():
 root = tk.Tk()
 root.attributes('-alpha',opacity)
 # The image must be stored to Tk or it will be garbage collected.
+
 root.image = tk.PhotoImage(file='res\img\logosample0.png')
+
 label = tk.Label(root, image=root.image, bg='white')
 root.overrideredirect(True)
 root.geometry("+250+250")
