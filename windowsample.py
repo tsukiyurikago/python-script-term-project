@@ -5,6 +5,7 @@ import webbrowser
 import tkinter.simpledialog
 import urllib
 from urllib import parse
+import gmail
 
 ##googlemap
 def Parsing_KAKAOMAP_Address(search_address):
@@ -125,15 +126,23 @@ class TopWindow:
         self.entry1.pack(side = tk.LEFT)
         self.button1 = tk.Button(self.frame, text = '온라인 자료 검색', width = 15, command = self.new_window)
         self.button1.pack(side = tk.LEFT)
-        self.button2 = tk.Button(self.frame, text = '오프라인 자료 검색', width = 15, command = self.new_window1)
+        self.button2 = tk.Button(self.frame, text = '학술지 소재지 위치 검색', width = 15, command = self.new_window1)
         self.button2.pack(side = tk.LEFT)
         self.frame1 = tk.Frame(self.master)
-        self.label = tk.Label(self.frame1, text = '검색창', width =15, height = 15)
+        self.label = tk.Label(self.frame1, text = '검색 결과 총량 빈도수')
         self.label.pack(side = tk.LEFT)
         self.frame.pack()
         self.frame1.pack()
 
-        self.SearchAmount = []
+        ##그래프
+        self.SearchAmount = [0]*10
+        self.SearchKeyword=[0]*10
+        self.SearchAmountIndex = 0
+        self.SearchAmountStart = 0
+        self.width=500
+        self.height=300
+        self.canvas = tk.Canvas(self.master,width=self.width,height = self.height, bg='white')
+        self.canvas.pack()
 
     def new_window(self):
 
@@ -142,10 +151,32 @@ class TopWindow:
         if not self.keyword == '':
             self.newWindow = tk.Toplevel(self.master)
             self.app = Demo2(self.newWindow, self.keyword)
+
+            newElement = eval(self.app.root.find("channel").find("total").text)
+            if newElement is None:
+                newElement = 1
+            if self.SearchAmountIndex < 10:
+                self.SearchKeyword[self.SearchAmountIndex] = self.keyword
+                self.SearchAmount[self.SearchAmountIndex] = newElement
+                self.SearchAmountIndex += 1
+            else:
+                self.SearchKeyword[self.SearchAmountStart] = self.keyword
+                self.SearchAmount[self.SearchAmountStart] = newElement
+                self.SearchAmountStart = (self.SearchAmountStart + 1) % 10
+            self.displayGraph()
         else:
             tkinter.messagebox.showinfo("오류","단어를 입력해주세요")
-            pass
 
+    def displayGraph(self):
+        self.canvas.delete('all')
+        maxC = int(max(self.SearchAmount))
+        self.canvas.create_line(10,self.height-30,self.width-10,self.height-30)
+        barW = (self.width-20)/len(self.SearchAmount)
+        for i in range(len(self.SearchAmount)):
+            self.canvas.create_rectangle(i*barW+25,-30+self.height-((self.height-70)*self.SearchAmount[(i+self.SearchAmountStart)%len(self.SearchAmount)]/maxC),i*barW+30,self.height-30)
+            #self.canvas.create_text(i*barW+10+5,self.height-10+5,text=chr(i+97))
+            self.canvas.create_text(i*barW+10+10,-35+self.height-((self.height-70)*self.SearchAmount[(i+self.SearchAmountStart)%len(self.SearchAmount)]/maxC)-10,text=self.SearchAmount[(i+self.SearchAmountStart)%len(self.SearchAmount)])
+            self.canvas.create_text(i * barW + 10 + 10,-50 + self.height - ((self.height - 70) * self.SearchAmount[(i+self.SearchAmountStart)%len(self.SearchAmount)] / maxC) - 10, text=self.SearchKeyword[(i+self.SearchAmountStart)%len(self.SearchAmount)])
 
     def new_window1(self):
         self.newWindow = tk.Toplevel(self.master)
@@ -232,14 +263,15 @@ class Demo2:
 
     def show_resultBox(self, root, resultBox):
         resultBox.delete(0,resultBox.size())
-        channelElements = root.getiterator("channel")
-        for things in channelElements:
-            itemElements = things.getiterator("item")
-            for item in itemElements:
-                title = item.find("title").text
-                title = title.replace('<b>', '')
-                title = title.replace('</b>', '')
-                resultBox.insert(tk.END, title)
+        if root.find("channel") is not None:
+            channelElements = root.getiterator("channel")
+            for things in channelElements:
+                itemElements = things.getiterator("item")
+                for item in itemElements:
+                    title = item.find("title").text
+                    title = title.replace('<b>', '')
+                    title = title.replace('</b>', '')
+                    resultBox.insert(tk.END, title)
 
 #        resultBox.insert(tk.INSERT, root[0][0].text)
 #        resultBox.insert(tk.INSERT, '\n')
@@ -299,25 +331,34 @@ class Demo2:
                         text.insert(tk.INSERT,title)
 
                         tk.Label(self.frameForSelect, text="네이버 링크").pack()
-                        title = item.find("link").text
-                        title = title.replace('<b>', '')
-                        title = title.replace('</b>', '')
-                        label = tk.Label(self.frameForSelect, text = title, fg="blue",cursor="hand2")
+                        link = item.find("link").text
+                        link = link.replace('<b>', '')
+                        link = link.replace('</b>', '')
+                        label = tk.Label(self.frameForSelect, text = link, fg="blue",cursor="hand2")
                         label.pack()
                         label.bind("<Button-1>", self.openWebBrowserFunc)
-                        title = item.find("description").text
-                        if title is not None:
+                        desc = item.find("description").text
+                        if desc is not None:
                             tk.Label(self.frameForSelect, text = "-문서 설명-").pack()
-                            title = title.replace('<b>', '')
-                            title = title.replace('</b>', '')
-                            tk.Label(self.frameForSelect, text = title).pack()
+                            desc = desc.replace('<b>', '')
+                            desc = desc.replace('</b>', '')
+                            tk.Label(self.frameForSelect, text = desc).pack()
                         else:
                             tk.Label(self.frameForSelect, text = "문서 설명이 존재하지 않습니다..").pack()
+
+                        tk.Label(self.frameForSelect, text="        해당 정보를 메일로 전달").pack(side=tk.LEFT)
+                        self.mailEntry = tk.Entry(self.frameForSelect)
+                        self.mailEntry.pack(side=tk.LEFT)
+                        if desc is None:
+                            tk.Button(self.frameForSelect,text="보내기", command= lambda: self.MailButton(title+'\n'+link, title)).pack(side=tk.LEFT)
+                        else:
+                            tk.Button(self.frameForSelect,text="보내기", command= lambda: self.MailButton(title+'\n'+link+'\n'+desc, title)).pack(side=tk.LEFT)
                     i += 1
 
 
-    def show_selected_info(self):
-        pass
+    def MailButton(self, mailsentence, mailtitle):
+        if self.mailEntry.get() != '':
+            gmail.sendMail(self.mailEntry.get(),mailsentence, mailtitle)
 
 
 class info_window:
@@ -357,15 +398,18 @@ class Demo3:
         self.frameForSearch = tk.Frame(self.master)
         #self.label = tk.Label(self.frame1, text = '오프라인 자료창', width =60, height = 30)
         #self.label.pack(side=tk.LEFT)
-        self.frameForSearch.pack(side= tk.LEFT)
+        self.frameForSearch.pack(side= tk.LEFT,anchor='n')
+
+        tk.Label(self.frameForSearch, text='지역을 입력해주세요').pack()
 
         self.EntryForSearch = tk.Entry(self.frameForSearch)
         self.EntryForSearch.pack()
 
         self.tree = ElementTree
+
         tk.Button(self.frameForSearch,text = "검색", command = self.showResult).pack()
 
-        self.ListboxForSearch = tk.Listbox(self.frameForSearch)
+        self.ListboxForSearch = tk.Listbox(self.frameForSearch, height=20)
         self.ListboxForSearch.bind('<Double-Button-1>', self.ListClicked)
         self.ListboxForSearch.pack()
 
@@ -373,7 +417,30 @@ class Demo3:
         self.quitButton.pack()
 
         self.frameForMap = tk.Frame(self.master, height=250, width = 350)
-        self.frameForMap.pack(side=tk.RIGHT)
+        self.frameForMap.pack(side=tk.TOP,anchor='n')
+
+        self.frameForSpotInfo = tk.Frame(self.master, height=140, width = 500)
+        self.frameForSpotInfo.pack(side=tk.BOTTOM,anchor='s')
+
+        tk.Label(self.frameForSpotInfo, text="소재지 간략 정보").place(y=0)
+        tk.Label(self.frameForSpotInfo, text="기관명").place(y=20)
+        self.libname = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.libname.place(x=55,y=20)
+        tk.Label(self.frameForSpotInfo, text="전화").place(y=40)
+        self.telno = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.telno.place(x=55,y=40)
+        tk.Label(self.frameForSpotInfo, text="담당부서").place(y=60)
+        self.task = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.task.place(x=55,y=60)
+        tk.Label(self.frameForSpotInfo, text="홈페이지").place(y=80)
+        self.siteUrl = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.siteUrl.place(x=55,y=80)
+        tk.Label(self.frameForSpotInfo, text="우편번호").place(y=100)
+        self.zipcod = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.zipcod.place(x=55,y=100)
+        tk.Label(self.frameForSpotInfo, text="메일").place(y=120)
+        self.mail = tk.Text(self.frameForSpotInfo, width=40,height=1)
+        self.mail.place(x=55,y=120)
 
         ##
 
@@ -388,10 +455,46 @@ class Demo3:
             for child in _list:
                 child.destroy()
             i=0
-            for addrdata in self.tree.find("body").find("items").getiterator("item"):
+            for item in self.tree.find("body").find("items").getiterator("item"):
                 if i==nIndex[0]:
-                    if addrdata.find("address") is not None:
-                        self.showMap(addrdata.find("address").text)
+                    self.libname.delete(1.0,tk.END)
+                    if item.find("libname") is not None:
+                        self.libname.insert(tk.INSERT,item.find("libname").text)
+                    else:
+                        self.libname.insert(tk.INSERT,"정보가 없습니다")
+
+                    self.mail.delete(1.0,tk.END)
+                    if item.find("mainemail") is not None:
+                        self.mail.insert(tk.INSERT, item.find("mainemail").text)
+                    else:
+                        self.mail.insert(tk.INSERT,"정보가 없습니다")
+
+                    self.telno.delete(1.0,tk.END)
+                    if item.find("maintelno") is not None:
+                        self.telno.insert(tk.INSERT,item.find("maintelno").text)
+                    else:
+                        self.telno.insert(tk.INSERT,"정보가 없습니다")
+
+                    self.task.delete(1.0,tk.END)
+                    if item.find("taskdept") is not None:
+                        self.task.insert(tk.INSERT,item.find("taskdept").text)
+                    else:
+                        self.task.insert(tk.INSERT,"정보가 없습니다")
+
+                    self.siteUrl.delete(1.0,tk.END)
+                    if item.find("url") is not None:
+                        self.siteUrl.insert(tk.INSERT,item.find("url").text)
+                    else:
+                        self.siteUrl.insert(tk.INSERT,"정보가 없습니다")
+
+                    self.zipcod.delete(1.0,tk.END)
+                    if item.find("zipno") is not None:
+                        self.zipcod.insert(tk.INSERT,item.find("zipno").text)
+                    else:
+                        self.zipcod.insert(tk.INSERT,"정보가 없습니다")
+
+                    if item.find("address") is not None:
+                        self.showMap(item.find("address").text)
                     else:
                         tk.Label(self.frameForMap,text="지도 정보가 없습니다..").pack()
                 i+=1
