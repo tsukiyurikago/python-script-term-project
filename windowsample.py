@@ -101,21 +101,13 @@ class Logo:
             self.newWindow = tk.Tk()
 
             if self.isConnected == False:
-                self.app = ErrorWindow(self.newWindow)
+                tkinter.messagebox.showinfo("오류","인터넷 연결됐는지 확인해주세요")
             else:
             #만약 실패하면 만드는 것을 실행하지 않는다..
-                self.app = TopWindow(self.newWindow)
-            self.master.destroy()
+                global app
+                app = TopWindow(self.newWindow)
 
-class ErrorWindow:
-    def __init__(self, master):
-        self.master = master
-        self.frame = tk.Frame(self.master)
-        self.frame.pack()
-        self.label = tk.Label(self.frame, text="서버연결에 실패하였습니다.")
-        self.label.pack()
-        self.button = tk.Button(self.frame, text="종료", command = lambda x = self.master : x.destroy() )
-        self.button.pack()
+            #self.master.destroy()
 
 
 class TopWindow:
@@ -202,7 +194,7 @@ class Demo2:
         self.frameForSelect = tk.Frame(self.master)
         self.frameForSelect.pack(side=tk.BOTTOM)
         #검색창에서 선택한 항목의 정보를 표시할 박스입니다
-        self.infoLabel = tk.Label(self.frameForSelect, text = "any")
+        self.infoLabel = tk.Label(self.frameForSelect, text = "정보가 이 곳에 표시됩니다")
         self.infoLabel.pack()
 
         server = "openapi.naver.com"
@@ -527,15 +519,17 @@ class Demo3:
 
 
     def showMap(self, keyword):
-        print(keyword)
+        #print(keyword)
         #print(Parsing_KAKAOMAP_Address(keyword)[0])
         MapURL = make_googlemap_url(Parsing_KAKAOMAP_Address(keyword)[0])
         with urlopen(MapURL) as u:
             raw_data = u.read()
         im = Image.open(BytesIO(raw_data))
         map_image = ImageTk.PhotoImage(im)
-        tk.Label(self.frameForMap, image=map_image, height=250, width=350, background='white').pack()
+        label = tk.Label(self.frameForMap, image=map_image, height=250, width=350, background='white')
+        label.pack()
         tk.mainloop()
+
 
 
 def main():
