@@ -6,6 +6,46 @@ import tkinter.simpledialog
 import urllib
 from urllib import parse
 
+##googlemap
+def Parsing_KAKAOMAP_Address(search_address):
+    # 카카오 요청, 다른 예시는 https://developers.kakao.com/docs/restapi/local 참고
+    server = "dapi.kakao.com"  # 서버
+    headers = {'Authorization': 'KakaoAK cdb3b880191792500cb20af4a46a8edc'}  # 인증 키
+    hangul_utf = urllib.parse.quote(search_address)
+    url = "/v2/local/search/address.xml?query=%s" %hangul_utf # 좌표값 url str화
+    conn = http.client.HTTPSConnection(server)  # 서버 연결
+    conn.request("GET", url, None, headers)
+    req = conn.getresponse()
+    data = req.read()  # 데이터 저장
+    tree = ElementTree.fromstring(data)  # ElementTree로 string화
+    itemElements = tree.getiterator("documents")  # documents 이터레이터 생성
+
+    result = []
+    for item in itemElements:
+        addr = []
+        addr.append(item.find("y"))
+        addr.append(item.find("x"))
+        result.append((float(addr[1].text), float(addr[0].text)))
+    return result
+
+
+def make_googlemap_url(center, zoom=16, maptype='roadmap'):
+    key = 'AIzaSyA9gjC63ldBuHDwYM6flkFJDbTq6vQhFdg'
+    point = str(center[1]) + ',' + str(center[0])
+    size = (500, 500)
+
+    url = "http://maps.google.com/maps/api/staticmap?"
+    url += "center=%s&" % point
+    url += "zoom=%i&" % zoom
+    url += 'scale=1&'
+    url += "size=" + str(size[0]) + 'x' + str(size[1]) + '&'
+    url += 'maptype=' + maptype + '&'
+    url += '&markers=color:red%7Clabel:C%7C' + point + '&'
+    url += 'key=' + key
+
+    return url
+##
+
 timer = 5.0
 opacity = 1.0
 
@@ -39,7 +79,7 @@ class Logo:
                          "/openapi/service/SchlsphjrnlLocplcInfoInqireSvc/getRegstSchlshpjrnlInsttListInfo?serviceKey=pucypWLDfbEtC6UjRg%2BTBdXIpC2MNzs5iRuBns3ZhSkMD8JIA5DCkS4fojhfaQWkn%2FRiQz1%2FRphZOqKL7nC5ng%3D%3D&address={0}".format(
                              keyword))
             req = conn.getresponse()
-            if (req.status != 200):
+            if req.status != 200:
                 self.isConnected = False
         except:
             self.isConnected = False
@@ -294,21 +334,44 @@ class info_window:
                         tk.Label(self.frame, text = title).pack()
                 nIndex += 1
 
+from urllib.request import urlopen
+from PIL import Image, ImageTk
+from io import BytesIO
 
 class Demo3:
     def __init__(self, master):
         self.master = master
-        self.frame1 = tk.Frame(self.master)
-        self.label = tk.Label(self.frame1, text = '오프라인 자료창', width =60, height = 30)
-        self.label.pack(side=tk.LEFT)
-        self.frame1.pack()
-        self.frame = tk.Frame(self.master)
-        self.quitButton = tk.Button(self.frame, text = '닫기', width = 15, command = self.close_windows)
-        self.quitButton.pack()
-        self.frame.pack()
+        self.frameForSearch = tk.Frame(self.master)
+        #self.label = tk.Label(self.frame1, text = '오프라인 자료창', width =60, height = 30)
+        #self.label.pack(side=tk.LEFT)
+        self.frameForSearch.pack()
 
+        self.EntryForSearch = tk.Entry(self.frameForSearch)
+        self.EntryForSearch.pack()
+
+        self.tree = ElementTree
+        tk.Button(self.frameForSearch,text = "검색", command = self.showResult).pack()
+
+        self.ListboxForSearch = tk.Listbox(self.frameForSearch)
+        self.ListboxForSearch.pack()
+
+        self.quitButton = tk.Button(self.frameForSearch, text = '닫기', width = 15, command = self.close_windows)
+        self.quitButton.pack()
+
+        self.frameForMap = tk.Frame(self.master)
+        self.frameForMap.pack(side=tk.RIGHT)
+
+        ##
+
+        ##
+
+
+    def close_windows(self):
+        self.master.destroy()
+
+
+    def getTree(self, keyword, Tree):
         conn = http.client.HTTPConnection("dev.ndsl.kr")  # openapi.naver.comdev.ndsl.kr/openapi/service
-        keyword = "서울"
         keyword = parse.quote(keyword)
         # keyword = keyword.encode("utf-8")
         conn.request("GET",
@@ -316,15 +379,30 @@ class Demo3:
                          keyword))
         req = conn.getresponse()
         print(req.status, req.reason)
-        print(req.read().decode('utf-8'))
+        data = req.read().decode('utf-8')
+        Tree = ElementTree.fromstring(data)
+        for i in Tree.find("body").find("items").getiterator("item"):
+            self.ListboxForSearch.insert(tk.END, i.find("abbrname").text)
 
-    def close_windows(self):
-        self.master.destroy()
+
+
+    def showResult(self):
+        self.getTree(self.EntryForSearch.get(), self.tree)
+
+
+    def showMap(self, keyword):
+        print(Parsing_KAKAOMAP_Address("무악동63-9")[0])
+        MapURL = make_googlemap_url(Parsing_KAKAOMAP_Address("무악동63-9")[0])
+        with urlopen(MapURL) as u:
+            raw_data = u.read()
+        im = Image.open(BytesIO(raw_data))
+        map_image = ImageTk.PhotoImage(im)
+        tk.Label(self.frameForMap, image=map_image, height=250, width=350, background='white').pack()
 
 
 def main():
     root = tk.Tk()
-    app = Logo(root)
+    app = TopWindow(root)
     root.mainloop()
 
 
