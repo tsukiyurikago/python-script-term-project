@@ -13,21 +13,38 @@ class Player:
         self.used=[False for i in range(self.UPPER+self.LOWER)]
 
     def setScore(self, score, index):
-        pass
+        self.scores[index] = score 
+    def setAtUsed(self, index):
+        self.used[index] = True
     def getUpperScore(self):
-        pass
+        return sum(self.scores[:self.UPPER])
     def getLowerScore(self):
-        pass
-    def getUsed(self):
-        pass
+        return sum(self.scores[self.UPPER : self.LOWER])
+    def getUsed(self, row):
+        if (row>=0 and row<=6):
+            return self.used[row]
+        elif (row>=8 and row<=14):
+            return self.used[row-2]
+        else:
+            return True
+
     def getTotalScore(self):
-        pass
+        if self.getUpperScore() > 63:
+            return self.getLowerScore() + self.getUpperScore() + 35
+        else:
+            return self.getLowerScore() + self.getUpperScore()
     def toString(self):
         return self.name
 
     def allUpperUsed(self): #upper category 6개 모두 사용되었는가 ?
                             #UpperScores, UpperBonus 계산에 활용
         for i in range(self.UPPER):
+            if (self.used[i] == False):
+                return False
+        return True
+
+    def allLowerUsed(self):
+        for i in range(self.UPPER, self.LOWER):
             if (self.used[i] == False):
                 return False
         return True
@@ -39,7 +56,10 @@ class Dice:
         return self.roll
 
 class Configuration:
-    configs = ["Category","Ones", "Twos","Threes","Fours","Fives","Sixes", "Upper Scores","Upper Bonus(35)","Three of a kind", "Four of a kind", "Full House(25)","Small Straight(30)", "Large Straight(40)", "Yahtzee(50)","Chance","Lower Scores", "Total"]
+    configs = ["Category","Ones", "Twos","Threes","Fours","Fives","Sixes", 
+                "Upper Scores","Upper Bonus(35)","Three of a kind", "Four of a kind", 
+                "Full House(25)","Small Straight(30)", "Large Straight(40)", "Yahtzee(50)",
+                "Chance","Lower Scores", "Total"]
 
     def getConfigs(): # 정적 메소드: 객체생성 없이 사용 가능
         return Configuration.configs
@@ -52,28 +72,86 @@ class Configuration:
         if (row>=0 and row<=6):
             return Configuration.scoreUpper(d,row+1)
         elif (row==8):
-            pass
+            return Configuration.scoreThreeOfAKind(d)
+        elif (row==9):
+            return Configuration.scoreFourOfAKind(d)
+        elif (row==10):
+            return Configuration.scoreFullHouse(d)
+        elif (row==11):
+            return Configuration.scoreSmallStraight(d)
+        elif (row==12):
+            return Configuration.scoreLargeStraight(d)
+        elif (row==13):
+            return Configuration.scoreYahtzee(d)
+        elif (row==14):
+            return Configuration.sumDie(d)
+
     def scoreUpper(d, num): # 정적 메소드: 객체생성 없이 사용 가능
                             #Upper Section 구성 (Ones, Twos, Threes, ...)에 대해 주사위 점수를 매 깁니다. 예를 들어,
                             # num이 1이면 "Ones"구성의 주사위 점수를 반환합니다.
-        pass
+        count = [i.getRoll() for i in d if i.getRoll() == num]
+        return sum(count)
+        
     def scoreThreeOfAKind(d):
-        pass
+        diceNum = [i.getRoll() for i in d]
+        for i in range(1,7):
+            if diceNum.count(i) == 3:
+                return i*3
+        return 0
+
     def scoreFourOfAKind(d):
-        pass
+        diceNum = [i.getRoll() for i in d]
+        for i in range(1,7):
+            if diceNum.count(i) == 4:
+                return i*4
+        return 0
+
     def scoreFullHouse(d):
-        pass
+        diceNum = [i.getRoll() for i in d]
+        for i in range(1,7):
+            if diceNum.count(i) == 3:
+                if len(set(diceNum)) == 2:
+                    return 25
+        return 0
+
     def scoreSmallStraight(d):
     #1 2 3 4 혹은 2 3 4 5 혹은 3 4 5 6 검사
     #1 2 2 3 4, 1 2 3 4 6, 1 3 4 5 6, 2 3 4 4 5
-        pass
+        diceNum = [i.getRoll() for i in d]
+        diceNumSet = set(diceNum)
+        ls1 = {1,2,3,4}
+        ls2 = {2,3,4,5}
+        ls3 = {3,4,5,6}
+
+        if diceNumSet & ls1 == ls1 or diceNumSet & ls2 == ls2 or diceNumSet & ls3 == ls3:
+            return 30
+
+        return 0
+
     def scoreLargeStraight(d):
     # 1 2 3 4 5 혹은 2 3 4 5 6 검사
-        pass
+        diceNum = [i.getRoll() for i in d]
+        diceNumSet = set(diceNum)
+        ls1 = {1,2,3,4,5}
+        ls2 = {2,3,4,5,6}
+
+        if diceNumSet & ls1 == ls1 or diceNumSet & ls2 == ls2:
+            return 40
+
+        return 0
+
     def scoreYahtzee(d): 
-        pass
+        diceNum = [i.getRoll() for i in d]
+        diceNumSet = set(diceNum)
+        if len(diceNumSet) == 1:
+            return 50
+
+        return 0
+
     def sumDie(d):
-        pass
+        diceNum = [i.getRoll() for i in d]
+
+        return sum(diceNum)
 
 class YahtzeeBoard:
     UPPERTOTAL = 6 #UpperScore 범주 인덱스
@@ -121,12 +199,13 @@ class YahtzeeBoard:
         self.window = Tk("Yahtzee Game")
         self.window.geometry("1600x800")
         self.TempFont = font.Font(size=16, weight='bold', family='Consolas')
-        for I in range(5): #Dice 객체 5개 생성
+        
+        for i in range(5): #Dice 객체 5개 생성
             self.dice.append(Dice())
         self.rollDice = Button(self.window, text='Roll Dice', font=self.TempFont, command=self.rollDiceListener) #Roll Dice 버튼
         self.rollDice.grid(row=0, column=0)
     
-        for I in range(5): #dice 버튼 5개 생성
+        for i in range(5): #dice 버튼 5개 생성
             self.diceButtons.append(Button(self.window, text='?', font=self.TempFont, width=8, command=lambda row=i: self.diceListener(row)))
             #각각의 dice 버튼에 대한 이벤트 처리 diceListener 연결
             #람다 함수를 이용하여 diceListener 매개변수 설정하면 하나의 Listener로 해결
@@ -172,6 +251,8 @@ class YahtzeeBoard:
         self.diceButtons[row]['bg'] = 'light gray'
 
     def categoryListener(self,row): #categoryListener
+        if self.roll == 0:
+            return 0
         score = Configuration.score(row,self.dice) #점수 계산
         index = row
         if (row>7):
@@ -192,22 +273,46 @@ class YahtzeeBoard:
     
         # LOWER category 전부 사용되었으면 LowerScore 계산
         if (self.players[self.player].allLowerUsed()):
-            pass
+            self.fields[self.LOWERTOTAL][self.player].configure(text = str(self.players[self.player].getLowerScore()))
+            
         # UPPER category와 LOWER category가 전부 사용되었으면 TOTAL 계산
         if (self.players[self.player].allUpperUsed() and self.players[self.player].allLowerUsed()):
-            pass
+            self.fields[self.TOTAL][self.player].configure(text = str(self.players[self.player].getTotalScore()))
+
         #다음 플레이어로 넘어가고 선택할 수 없는 카테고리들은 disable 시킴
         self.player = (self.player + 1) % self.numPlayers
         for i in range(self.TOTAL+1):
             for j in range(self.numPlayers):
+                self.fields[i][j]['state'] = 'disabled'
+                self.fields[i][j]['bg'] = 'light gray'
+
+
+        for i in range(self.TOTAL+1):
+            if i == self.UPPERTOTAL or i == self.UPPERBONUS or i ==self.LOWERTOTAL or i == self.TOTAL or self.players[self.player].getUsed(i) == True:
                 pass
+            else:
+                self.fields[i][self.player]['state'] = 'active'
+                self.fields[i][self.player]['bg'] = 'white smoke'
         
         # 라운드 증가 시키고 종료 검사
         if (self.player == 0):
             self.round += 1
         if (self.round == 13):
-            pass
+            totalScores = [i.getTotalScore() for i in self.players]
+            for i in self.players:
+                if i.getTotalScore() == max(totalScores):
+                    tkinter.messagebox.showinfo("게임 종료" ,"축하합니다. {0}가 이겼습니다.".format(i.toString()))
+
         #다시 Roll Dice 과 diceButtons 버튼 활성화, bottomLabel 초기화
-        pass
+        self.roll = 0
+        for i in self.diceButtons:
+            i.configure(text="?")
+            i['state'] = 'active'
+            i['bg'] = 'white smoke'
+        self.rollDice.configure(text='Roll Dice')
+        self.rollDice['state'] = 'active'
+        self.rollDice['bg'] = 'white smoke'
+        self.bottomLabel.configure(text=self.players[self.player].toString()+ "차례: Roll Dice 버튼을 누르세요")
+        
 
 YahtzeeBoard()
