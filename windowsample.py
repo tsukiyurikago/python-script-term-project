@@ -6,6 +6,7 @@ import tkinter.simpledialog
 import urllib
 from urllib import parse
 import gmail
+import spam
 
 ##googlemap
 def Parsing_KAKAOMAP_Address(search_address):
@@ -150,11 +151,15 @@ class TopWindow:
             if self.SearchAmountIndex < 10:
                 self.SearchKeyword[self.SearchAmountIndex] = self.keyword
                 self.SearchAmount[self.SearchAmountIndex] = newElement
-                self.SearchAmountIndex += 1
+                #################################__C++ 모듈 함수 사용한 부분__################################################################
+                self.SearchAmountIndex = spam.Sum(self.SearchAmountIndex, 1)
+                #################################__C++ 모듈 함수 사용################################################################
             else:
                 self.SearchKeyword[self.SearchAmountStart] = self.keyword
                 self.SearchAmount[self.SearchAmountStart] = newElement
-                self.SearchAmountStart = (self.SearchAmountStart + 1) % 10
+                ################################__C++ 함수__##################################################
+                self.SearchAmountStart = spam.Modular((spam.Sub(self.SearchAmountStart, 1)), 10)
+                ################################__C++ 함수__##################################################
             self.displayGraph()
         else:
             tkinter.messagebox.showinfo("오류","단어를 입력해주세요")
