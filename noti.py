@@ -24,13 +24,13 @@ baseurl = 'http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/re
 bot = telepot.Bot(TOKEN)
 
 
-def myGetData(keyword):
+def myGetData(keyword, pageNum = 1):
     server = "openapi.naver.com"
     client_id = "ZuLj_9774MFbh52EAnsz"
     client_secret = "0fgHPxzAdQ"
     conn = http.client.HTTPSConnection(server)
 #    keyword = keyword.encode("utf-8")
-    conn.request("GET", "/v1/search/doc.xml?query={0}&display=10&start=1".format(keyword),
+    conn.request("GET", ("/v1/search/doc.xml?query={0}&display=1&start="+str(pageNum)).format(keyword),
                  None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
     req = conn.getresponse()
     print(req.status, req.reason)
@@ -38,7 +38,10 @@ def myGetData(keyword):
     data = req.read(int(cLen)).decode('utf-8')
     eTree = ElementTree.fromstring(data)
     result = ''
-    if eTree.find("channel") is not None:
+
+    result = keyword.decode("utf-8") + "의 검색결과로 [" + eTree.find("channel").find("total").text + "]개의 학술지가 있어요\n\n"
+
+    if eval(eTree.find("channel").find("total").text) > 0:
         channelElements = eTree.getiterator("channel")
         for things in channelElements:
             itemElements = things.getiterator("item")
@@ -48,6 +51,7 @@ def myGetData(keyword):
                 title = title.replace('</b>', '')
                 title += "\n\n"
                 result += title
+
     return result
 
 def getData(loc_param, date_param):

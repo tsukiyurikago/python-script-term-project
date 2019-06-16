@@ -14,6 +14,15 @@ import traceback
 
 import noti
 
+class userstat:
+    def __init__(self,id,keyword,pageNum=1):
+        self.id=id
+        self.keyword=keyword
+        self.pageNum=pageNum
+
+users = []
+
+
 def replyMyData(user, keyword):
     msg = ''
     keyword = keyword.encode("utf-8")
@@ -82,11 +91,14 @@ def handle(msg):
     elif text.startswith('확인'):
         print('try to 확인')
         check( chat_id )
-    if text.startswith('뿌니') and len(args)>1:
+    elif text.startswith('검색') and len(args)>1:
         print('try to 우리꺼', args[1])
         replyMyData( chat_id, args[1] )
+    elif text.startswith('재검색') and len(args)>1:
+        print('try to 우리꺼', args[1])
+        replyMyData( chat_id, args[1], args[2] )
     else:
-        noti.sendMessage(chat_id, '모르는 명령어입니다.\n지역 [지역번호], 저장 [지역번호], 확인 중 하나의 명령을 입력하세요.')
+        noti.sendMessage(chat_id, '모르는 명령어입니다.\n명령어 목록:\n검색 찾을단어')
 
 
 today = date.today()
