@@ -6,7 +6,6 @@ import tkinter.simpledialog
 import urllib
 from urllib import parse
 import gmail
-import spam
 
 ##googlemap
 def Parsing_KAKAOMAP_Address(search_address):
