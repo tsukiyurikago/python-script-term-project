@@ -1,0 +1,82 @@
+#include "python.h" 
+
+static PyObject *
+
+spam_Modular(PyObject *self, PyObject *args)
+{
+	int a;
+	int b;
+
+	if (!PyArg_ParseTuple(args, "ii", &a, &b))
+		return NULL;
+
+	return Py_BuildValue("i",  a%b);
+}
+
+spam_Sum(PyObject *self, PyObject *args)
+{
+	int a;
+	int b;
+
+	if (!PyArg_ParseTuple(args, "ii", &a, &b))
+		return NULL;
+
+	return Py_BuildValue("i", a+b);
+}
+
+spam_Sub(PyObject *self, PyObject *args)
+{
+	int a;
+	int b;
+
+	if (!PyArg_ParseTuple(args, "ii", &a, &b))
+		return NULL;
+
+	return Py_BuildValue("i", a - b);
+}
+
+spam_Division(PyObject *self, PyObject *args)
+{
+	int a;
+	int b;
+
+	if (!PyArg_ParseTuple(args, "ii", &a, &b))
+		return NULL;
+
+	return Py_BuildValue("i", a / b);
+}
+
+spam_Multi(PyObject *self, PyObject *args)
+{
+	int a;
+	int b;
+
+	if (!PyArg_ParseTuple(args, "ii", &a, &b))
+		return NULL;
+
+	return Py_BuildValue("i", a * b);
+}
+
+static PyMethodDef SpamMethods[] = {
+	{ "Modular", spam_Modular, METH_VARARGS,
+	"%" }, { "Sum", spam_Sum, METH_VARARGS,
+	"+" }, { "Sub", spam_Sub, METH_VARARGS,
+	"-" }, { "Division", spam_Division, METH_VARARGS,
+	"/" }, { "Multi", spam_Multi, METH_VARARGS,
+	"*" },
+	{ NULL, NULL, 0, NULL }
+};
+
+static struct PyModuleDef spammodule = {
+	PyModuleDef_HEAD_INIT,
+	"spam",
+	"It is test module.", 
+	-1,SpamMethods
+
+};
+
+PyMODINIT_FUNC
+PyInit_spam(void)
+{
+	return PyModule_Create(&spammodule);
+}
