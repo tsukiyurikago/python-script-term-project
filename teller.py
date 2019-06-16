@@ -15,19 +15,44 @@ import traceback
 import noti
 
 class userstat:
-    def __init__(self,id,keyword,pageNum=1):
+    def __init__(self,id,keyword, pageMax):
         self.id=id
         self.keyword=keyword
-        self.pageNum=pageNum
+        self.pageMax = pageMax
+        self.currentNum = 0
 
 users = []
 
 
-def replyMyData(user, keyword):
+def replyUrlData(user, keyword, pageNum):
     msg = ''
-    keyword = keyword.encode("utf-8")
-    res = noti.myGetData(keyword)
+    res = noti.myGetUrlData(keyword, pageNum)
     msg += res
+
+    noti.sendMessage(user, msg)
+
+
+def replyMyData(user, keyword, pageNum = 1):
+    msg = ''
+    #res = noti.myGetData(keyword)
+    #msg += res
+
+    if len(users) == 0:
+        n = 0
+        res, n = noti.myGetData(keyword.encode("utf-8"))
+        msg += res
+        users.append(userstat(user,keyword, n))
+    else:
+        for item in users:
+            if item.id == user:
+                res = noti.myGetNthData(keyword.encode("utf-8"), pageNum)
+                msg += res
+                noti.sendMessage(user, msg)
+                return
+        n = 0
+        res, n = noti.myGetData(keyword.encode("utf-8"))
+        msg += res
+        users.append(userstat(user,keyword, n))
 
     noti.sendMessage(user, msg)
 
@@ -79,6 +104,25 @@ def handle(msg):
     text = msg['text']
     args = text.split(' ')
 
+    for item in users:
+        if item.id == chat_id:
+            print("이미검색중인아이디")
+            if text.startswith('완료') and len(args) > 0:
+                noti.sendMessage(item.id, '이제 그만 검색할게\n\n검색 [찾을단어] 로 다시 검색할 수 있어')
+                users.remove(item)
+            elif text.startswith('페이지') and len(args) > 1:
+                if 0<int(args[1])<item.pageMax+1:
+                    item.currentNum=int(args[1])
+                    replyMyData( chat_id, item.keyword, args[1] )
+                else:
+                    noti.sendMessage(item.id, '1에서 '+str(item.pageMax)+"사이 페이지만 찾을 수 있어")
+            # elif text.startswith('네이버') and len(args) > 0:
+            #     replyUrlData( chat_id, item.keyword, item.currentNum )
+            else:
+                noti.sendMessage(item.id, '너는 지금' + item.keyword + '를 검색 중이고 다음 명령어를 들어줄게\n\n\'완료\' - 현재 검색을 끝냄\n\n\'페이지 [숫자]\' - [숫자]번째 자료를 찾아본다')
+
+            return
+
     if text.startswith('지역') and len(args)>1:
         print('try to 지역', args[1])
         replyAptData( '201705', chat_id, args[1] )
@@ -94,9 +138,6 @@ def handle(msg):
     elif text.startswith('검색') and len(args)>1:
         print('try to 우리꺼', args[1])
         replyMyData( chat_id, args[1] )
-    elif text.startswith('재검색') and len(args)>1:
-        print('try to 우리꺼', args[1])
-        replyMyData( chat_id, args[1], args[2] )
     else:
         noti.sendMessage(chat_id, '모르는 명령어입니다.\n명령어 목록:\n검색 찾을단어')
 

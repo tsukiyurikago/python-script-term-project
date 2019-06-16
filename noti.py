@@ -23,6 +23,39 @@ MAX_MSG_LENGTH = 300
 baseurl = 'http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcRHTrade?ServiceKey='+key
 bot = telepot.Bot(TOKEN)
 
+def myGetUrlData(keyword, pageNum):
+    server = "openapi.naver.com"
+    client_id = "ZuLj_9774MFbh52EAnsz"
+    client_secret = "0fgHPxzAdQ"
+    conn = http.client.HTTPSConnection(server)
+    #    keyword = keyword.encode("utf-8")
+    conn.request("GET", ("/v1/search/doc.xml?query={0}&display=1&start=" + str(pageNum)).format(keyword),
+                 None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
+    req = conn.getresponse()
+    print(req.status, req.reason)
+    if req.status != 200:
+        return "찾는 페이지로부터 정보를 받아올 수 없다"
+    cLen = req.getheader("Content-Length")
+    data = req.read(int(cLen)).decode('utf-8')
+    eTree = ElementTree.fromstring(data)
+    result = ''
+
+    result = keyword.decode("utf-8") + str(pageNum) + "번째 결과:\n"
+
+    if eval(eTree.find("channel").find("total").text) > 0:
+        channelElements = eTree.getiterator("channel")
+        for things in channelElements:
+            itemElements = things.getiterator("item")
+            for item in itemElements:
+                title = item.find("link").text
+                title = title.replace('<b>', '')
+                title = title.replace('</b>', '')
+                title += "\n\n"
+                result += title
+
+    n = eval(eTree.find("channel").find("total").text)
+    return result
+
 
 def myGetData(keyword, pageNum = 1):
     server = "openapi.naver.com"
@@ -30,7 +63,7 @@ def myGetData(keyword, pageNum = 1):
     client_secret = "0fgHPxzAdQ"
     conn = http.client.HTTPSConnection(server)
 #    keyword = keyword.encode("utf-8")
-    conn.request("GET", ("/v1/search/doc.xml?query={0}&display=1&start="+str(pageNum)).format(keyword),
+    conn.request("GET", ("/v1/search/doc.xml?query={0}&display=10&start="+str(pageNum)).format(keyword),
                  None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
     req = conn.getresponse()
     print(req.status, req.reason)
@@ -39,19 +72,63 @@ def myGetData(keyword, pageNum = 1):
     eTree = ElementTree.fromstring(data)
     result = ''
 
-    result = keyword.decode("utf-8") + "의 검색결과로 [" + eTree.find("channel").find("total").text + "]개의 학술지가 있어요\n\n"
+    result = keyword.decode("utf-8") + "의 검색결과로 [" + eTree.find("channel").find("total").text + "]개의 학술지가 있어\n\n" + str(pageNum) + "페이지:\n"
 
     if eval(eTree.find("channel").find("total").text) > 0:
         channelElements = eTree.getiterator("channel")
         for things in channelElements:
             itemElements = things.getiterator("item")
+            i = 0
             for item in itemElements:
-                title = item.find("title").text
+                title = str(pageNum + i) + '\n'
+                title += item.find("title").text
                 title = title.replace('<b>', '')
                 title = title.replace('</b>', '')
-                title += "\n\n"
+                title += "\n네이버링크: "
+                title += item.find("link").text
+                title += '\n\n'
                 result += title
+                i += 1
 
+    n = eval(eTree.find("channel").find("total").text)
+    return result, n
+
+def myGetNthData(keyword, pageNum = 1):
+    server = "openapi.naver.com"
+    client_id = "ZuLj_9774MFbh52EAnsz"
+    client_secret = "0fgHPxzAdQ"
+    conn = http.client.HTTPSConnection(server)
+#    keyword = keyword.encode("utf-8")
+    conn.request("GET", ("/v1/search/doc.xml?query={0}&display=10&start="+str(int(pageNum)*10+1)).format(keyword),
+                 None, {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret})
+    req = conn.getresponse()
+    print(req.status, req.reason)
+    if req.status != 200:
+        return "찾는 페이지로부터 정보를 받아올 수 없다"
+    cLen = req.getheader("Content-Length")
+    data = req.read(int(cLen)).decode('utf-8')
+    eTree = ElementTree.fromstring(data)
+    result = ''
+
+    result = keyword.decode("utf-8") + '\n' + str(pageNum) + "페이지:\n"
+
+    if eval(eTree.find("channel").find("total").text) > 0:
+        channelElements = eTree.getiterator("channel")
+        for things in channelElements:
+            itemElements = things.getiterator("item")
+            i = 1
+            for item in itemElements:
+                title = str(int(pageNum)*10+i) + '\n'
+                title += item.find("title").text
+                title = title.replace('<b>', '')
+                title = title.replace('</b>', '')
+                title += "\n네이버링크: "
+                title += item.find("link").text
+                title += '\n\n'
+                result += title
+                i += 1
+
+    n = eval(eTree.find("channel").find("total").text)
     return result
 
 def getData(loc_param, date_param):
